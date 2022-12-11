@@ -1,11 +1,14 @@
+import functools
+import operator
 from collections import deque
 
 
 def game(rounds, divide_worry_level):
     monkeys = setup()
+    divisor_product = functools.reduce(operator.mul, [m.test.divisor for m in monkeys])
     for _ in range(rounds):
         for monkey in monkeys:
-            monkey.take_turn(divide_worry_level)
+            monkey.take_turn(divisor_product, divide_worry_level)
     monkey_inspections = sorted([monkey.inspections for monkey in monkeys])
     return monkey_inspections[-2] * monkey_inspections[-1]
 
@@ -46,16 +49,16 @@ class Monkey:
         self.inspections = 0
         self.test = None
 
-    def take_turn(self, divide_worry_level=True):
+    def take_turn(self, divisor_product, divide_worry_level=True):
         while len(self.items):
-            self.inspect(self.items.popleft(), divide_worry_level)
+            self.inspect(self.items.popleft(), divisor_product, divide_worry_level)
 
-    def inspect(self, item, divide_worry_level):
+    def inspect(self, item, divisor_product, divide_worry_level):
         self.inspections += 1
         worry_level = self.operation(item)
         if divide_worry_level:
             worry_level //= 3
-        worry_level %= 2 * 3 * 5 * 7 * 11 * 13 * 17 * 19
+        worry_level %= divisor_product
         if worry_level % self.test.divisor == 0:
             self.test.target_true.receive_item(worry_level)
         else:
